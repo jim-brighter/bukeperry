@@ -18,4 +18,3 @@ outputs.json
 # BepInEx runtime / logs
 *.log
 *.zip
-!mod/dist/*.zip
