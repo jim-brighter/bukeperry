@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/cdk"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "jim-brighter"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "npm"
+    directory: "/llm-lambda"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "jim-brighter"
+    groups:
+      all:
+        patterns:
+          - "*"

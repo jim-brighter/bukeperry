@@ -1,0 +1,21 @@
+.DS_Store
+node_modules/
+
+# CDK
+cdk.out/
+outputs.json
+
+# .NET / C# build artifacts
+[Bb]in/
+!cdk/bin/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+.vs/
+.idea/
+
+# BepInEx runtime / logs
+*.log
+*.zip
+!mod/dist/*.zip

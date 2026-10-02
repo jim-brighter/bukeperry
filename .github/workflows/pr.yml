@@ -1,0 +1,20 @@
+name: PR
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  synth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Synth
+        run: |
+          cd cdk
+          npm i
+          npm run synth

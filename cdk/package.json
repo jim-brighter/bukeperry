@@ -1,0 +1,29 @@
+{
+  "name": "cdk",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "cdk:deploy": "cdk deploy --all --require-approval never --outputs-file outputs.json",
+    "cdk:llm-lambda:install": "cd ../llm-lambda && npm i && cd ../cdk",
+    "cdk:llm-lambda:test": "cd ../llm-lambda && npm test && cd ../cdk",
+    "deploy": "npm run cdk:llm-lambda:install && npm run cdk:llm-lambda:test && npm run cdk:deploy",
+    "synth": "npm run cdk:llm-lambda:install && npm run cdk:llm-lambda:test && cdk synth --all"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.16.2",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30",
+    "@types/node": "^26.6.2",
+    "jest": "^30",
+    "aws-cdk": "2.1143.0",
+    "tsx": "^4.23.15",
+    "typescript": "~7.0.2"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.271.0",
+    "constructs": "^10.5.0"
+  }
+}
