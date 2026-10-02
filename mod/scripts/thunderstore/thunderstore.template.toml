@@ -6,7 +6,7 @@ namespace = "jimbrighter"
 name = "BukeperryMod"
 versionNumber = "__VERSION__"
 description = "Bukeperry the Cave Troll merchant and conversational companion for Valheim."
-websiteUrl = "https://github.com/jim-brighter/valheim-monitor"
+websiteUrl = "https://github.com/jim-brighter/bukeperry"
 containsNsfwContent = false
 
 [package.dependencies]

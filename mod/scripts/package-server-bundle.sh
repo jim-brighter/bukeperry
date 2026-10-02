@@ -64,10 +64,4 @@ cp "$DIST_DIR/BukeperryMod.dll" "$TMP_DIR/staging/BepInEx/plugins/"
 echo "Compressing server bundle to: $OUTPUT_ZIP..."
 (cd "$TMP_DIR/staging" && zip -q -r "$OUTPUT_ZIP" .)
 
-# Also maintain an unversioned copy in dist for convenience
-UNVERSIONED_ZIP="$DIST_DIR/bukeperry-server-bundle.zip"
-if [[ "$OUTPUT_ZIP" != "$UNVERSIONED_ZIP" ]]; then
-  cp "$OUTPUT_ZIP" "$UNVERSIONED_ZIP"
-fi
-
 echo "✓ Successfully created: $(ls -lh "$OUTPUT_ZIP")"
