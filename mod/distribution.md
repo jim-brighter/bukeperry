@@ -60,7 +60,7 @@ We implement a tailored two-pronged distribution strategy:
           ├── Jotunn.dll
           └── BukeperryMod.dll
   ```
-- **Installer Script**: [`mod/scripts/install-server.sh`](file:///Users/jim/github/jim-brighter/bukeperry/mod/scripts/install-server.sh)
+- **Installer Script**: [`mod/scripts/install-server.sh`](scripts/install-server.sh)
   - Fetches the latest release asset from GitHub.
   - Extracts bundle directly into `/home/vhserver/valheim_server` (or custom `-d` directory).
   - Prompts for or accepts `-e <endpoint>` and `-k <key>` for AWS Bedrock API Gateway.
@@ -70,12 +70,12 @@ We implement a tailored two-pronged distribution strategy:
 
 ## 3. Versioning & Automation
 
-- **Single Source of Truth**: `PluginVersion` in [`mod/BukeperryMod/BukeperryPlugin.cs`](file:///Users/jim/github/jim-brighter/bukeperry/mod/BukeperryMod/BukeperryPlugin.cs).
-- **CI Workflow ([`.github/workflows/main.yml`](file:///Users/jim/github/jim-brighter/bukeperry/.github/workflows/main.yml))**:
+- **Single Source of Truth**: `PluginVersion` in [`mod/BukeperryMod/BukeperryPlugin.cs`](BukeperryMod/BukeperryPlugin.cs).
+- **CI Workflow ([`.github/workflows/main.yml`](../.github/workflows/main.yml))**:
   1. Runs `cdk deploy` and creates a GitHub Release via `jim-brighter/github-release-action`.
-  2. Runs [`mod/scripts/package-server-bundle.sh`](file:///Users/jim/github/jim-brighter/bukeperry/mod/scripts/package-server-bundle.sh) to assemble `bukeperry-server-bundle-v<version>.zip`.
+  2. Runs [`mod/scripts/package-server-bundle.sh`](scripts/package-server-bundle.sh) to assemble `bukeperry-server-bundle-v<version>.zip`.
   3. Uses `gh release upload` to attach `bukeperry-server-bundle-v*.zip` to the release.
-  4. Runs [`mod/scripts/thunderstore/publish.sh`](file:///Users/jim/github/jim-brighter/bukeperry/mod/scripts/thunderstore/publish.sh):
+  4. Runs [`mod/scripts/thunderstore/publish.sh`](scripts/thunderstore/publish.sh):
      - Queries Thunderstore API to check if `PluginVersion` is already published.
      - If new, generates `manifest.json` dynamically and publishes via Thunderstore CLI (`tcli`) using `THUNDERSTORE_TOKEN`.
      - If version already exists or token is absent, skips cleanly without failing the build.
