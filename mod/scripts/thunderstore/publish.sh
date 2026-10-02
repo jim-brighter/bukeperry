@@ -34,24 +34,21 @@ fi
 
 # 3. Check if version already exists on Thunderstore
 echo "Checking if version $MOD_VERSION is already published to Thunderstore..."
-TMP_CHECK_JSON=$(mktemp /tmp/ts_check.XXXXXX)
-trap 'rm -f "$TMP_CHECK_JSON"' EXIT
 
-HTTP_CODE=$(curl -s -o "$TMP_CHECK_JSON" -w "%{http_code}" "https://valheim.thunderstore.io/api/experimental/package/jimbrighter/BukeperryMod/" || true)
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://thunderstore.io/api/experimental/package/jimbrighter/BukeperryMod/$MOD_VERSION/" || true)
 
 if [[ "$HTTP_CODE" == "200" ]]; then
-  ALREADY_PUBLISHED=$(jq -r --arg v "$MOD_VERSION" '.versions[]? | select(.version_number == $v) | .version_number' "$TMP_CHECK_JSON" 2>/dev/null || true)
-  if [[ -n "$ALREADY_PUBLISHED" ]]; then
-    echo "Version $MOD_VERSION is already published to Thunderstore. Skipping publish."
-    exit 0
-  fi
+  echo "Version $MOD_VERSION is already published to Thunderstore. Skipping publish."
+  exit 0
+elif [[ "$HTTP_CODE" != "404" ]]; then
+  echo "Warning: Thunderstore API returned unexpected HTTP status $HTTP_CODE when checking version $MOD_VERSION."
 fi
 
 echo "New version $MOD_VERSION detected! Preparing package..."
 
 # 4. Ensure tcli is available
 TMP_TCLI_DIR=$(mktemp -d /tmp/tcli-install.XXXXXX)
-trap 'rm -rf "$TMP_TCLI_DIR" "$TMP_CHECK_JSON"' EXIT
+trap 'rm -rf "$TMP_TCLI_DIR"' EXIT
 
 OS_TYPE=$(uname -s)
 if [[ "$OS_TYPE" == "Darwin" ]]; then
@@ -68,7 +65,7 @@ chmod +x "$TCLI_BIN"
 
 # 5. Stage Package Files
 STAGE_DIR=$(mktemp -d /tmp/ts-stage.XXXXXX)
-trap 'rm -rf "$TMP_TCLI_DIR" "$TMP_CHECK_JSON" "$STAGE_DIR"' EXIT
+trap 'rm -rf "$TMP_TCLI_DIR" "$STAGE_DIR"' EXIT
 
 sed "s/__VERSION__/$MOD_VERSION/g" "$SCRIPT_DIR/manifest.template.json" > "$STAGE_DIR/manifest.json"
 sed "s/__VERSION__/$MOD_VERSION/g" "$SCRIPT_DIR/thunderstore.template.toml" > "$STAGE_DIR/thunderstore.toml"
