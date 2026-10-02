@@ -108,7 +108,7 @@ else
 fi
 
 # 2. Download Latest Server Bundle
-echo -e "\n${BOLD}Step 2: Fetching latest bukeperry-server-bundle.zip...${NC}"
+echo -e "\n${BOLD}Step 2: Fetching latest bukeperry-server-bundle-v*.zip...${NC}"
 TMP_DIR=$(mktemp -d /tmp/bukeperry-install.XXXXXX)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
@@ -122,7 +122,7 @@ if [[ -z "$DOWNLOAD_URL" ]]; then
 fi
 
 if [[ -z "$DOWNLOAD_URL" ]]; then
-  echo -e "${RED}Error: Failed to find bukeperry-server-bundle.zip download URL from GitHub Releases.${NC}"
+  echo -e "${RED}Error: Failed to find bukeperry-server-bundle zip download URL from GitHub Releases.${NC}"
   echo -e "${RED}Please verify releases exist on https://github.com/$REPO/releases${NC}"
   exit 1
 fi

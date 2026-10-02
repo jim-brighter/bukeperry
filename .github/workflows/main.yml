@@ -42,7 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
-          gh release upload "$LATEST_TAG" mod/dist/bukeperry-server-bundle*.zip --clobber
+          gh release upload "$LATEST_TAG" mod/dist/bukeperry-server-bundle-v*.zip --clobber
 
       - name: Publish to Thunderstore
         env:

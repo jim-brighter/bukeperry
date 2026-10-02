@@ -51,5 +51,5 @@ When hosting a dedicated server with AI conversation enabled:
 ---
 
 ## 🔗 Links & Source
-- Source code: [GitHub: jim-brighter/valheim-monitor](https://github.com/jim-brighter/valheim-monitor)
+- Source code: [GitHub: jim-brighter/bukeperry](https://github.com/jim-brighter/bukeperry)
 - Created by **Jim Brighter**
