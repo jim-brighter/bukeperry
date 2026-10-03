@@ -1,7 +1,7 @@
 # Bukeperry: In-Game AI Companion & Discord Bot for Valheim 🌲
 
 Bukeperry is an interactive AI companion for [Valheim](https://www.valheimgame.com/), featuring:
-- **In-Game C# Companion Mod (`mod/`)**: Custom passive/retaliatory troll trader NPC with custom stats (15,000 HP, 1,000 DMG), speech bubbles, trade interactions, and conversational AI triggered by player proximity chat and shouts.
+- **In-Game C# Companion Mod (`mod/`)**: Custom passive/retaliatory troll trader NPC with speech bubbles, trade interactions, and conversational AI triggered by player proximity chat and shouts.
 - **Serverless AWS Bedrock LLM Backend (`llm-lambda/`)**: Generative AI bot powered by `google.gemma-4-31b` via AWS Bedrock Mantle, with local RAG knowledge retrieval and persistent multi-turn conversation memory in DynamoDB.
 - **Discord Integration & In-Game Chat Endpoint**: API Gateway exposing `/interactions` for Discord slash commands (`/bukeperry`, `/bukeperry-reset`) and `/game/chat` with API Key authentication for in-game chat synchronization.
 - **AWS CDK Infrastructure (`cdk/`)**: Automated cloud infrastructure definitions deploying stack `ValheimLLM`.

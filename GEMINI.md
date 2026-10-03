@@ -44,7 +44,7 @@ The project is structured into three main components:
   - `BukeperryMod/`: C# .NET Standard 2.1 project utilizing BepInEx 5 and Jötunn.
   - Custom Troll Prefab & Merchant: Registers custom `bukeperry` NPC trader with custom dialog lines, inventory items, and logs purchase anti-greed check.
   - Conversational AI: Sniffs `/s` shouts and proximity speech, dispatches async HTTP POSTs to API Gateway off-thread, and delivers responses via `ZRoutedRpc` `BukeperrySpeechRPC` (overhead bubble `Chat.SetNpcText` + chat log).
-  - Single Source of Truth: Mod version is maintained solely in `BukeperryPlugin.cs` (`PluginVersion = "0.2.0"`).
+  - Single Source of Truth: Mod version is maintained solely in `BukeperryPlugin.cs` (`PluginVersion = "0.2.1"`).
 - **Distribution Targets**:
   - **Thunderstore / r2modman (Client Players)**:
     - Namespace: `jimbrighter`, Package: `BukeperryMod`.
