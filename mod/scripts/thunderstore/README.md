@@ -9,11 +9,12 @@ Tired of silent NPCs? Bukeperry watches over the Black Forest with pride, swagge
 ## 🌟 Features
 
 ### 🛒 The Forest Merchant
-- **Store Inventory**: Sells essentials like Wood, Stone, Resin, and Feathers for Gold Coins.
-- **Strict Forest Policy**: Bukeperry loves trees and hates lazy lumberjacks. Attempting to sell wood to him will trigger an immediate troll reprimand.
+- **Store Inventory**: Sells forest essentials like Stone and Wood for Gold Coins.
+- **Merchant Interaction**: Walk up to Bukeperry and press `[E]` to browse his wares.
+- **Where to Find Him**: Bukeperry makes his home in the Black Forest nearest to your world spawn. Venture into the woods to find his grove!
 
 ### 💬 Live In-Game Conversations
-- **Talk Naturally**: Just walk up to Bukeperry and talk in local chat (`/say` or normal typing) or shout (`/s`).
+- **Talk Naturally**: Walk up to Bukeperry and talk in local chat or shout across the woods with `/s`.
 - **Overhead Speech**: Bukeperry responds with dynamic overhead speech bubbles and chat messages in his authentic caveman troll voice.
 - **Lore & Creature Knowledge**: Ask him about the forest, other biomes, bosses, skeletons, or his opinions on Odin and the gods.
 - **Zero Lag**: All AI processing runs completely asynchronous off the game thread. Zero frame drops or server stutter.
@@ -37,19 +38,21 @@ Tired of silent NPCs? Bukeperry watches over the Black Forest with pride, swagge
 
 ---
 
-## ⚙️ Configuration (Server Only)
+## ⚙️ Configuration (Server / Host)
 
-When hosting a dedicated server with AI conversation enabled:
+When hosting a dedicated server (or playing local/singleplayer) with AI conversation enabled:
 - Config file: `BepInEx/config/com.jimbrighter.bukeperrymod.cfg`
 - Fields:
   - `ApiEndpoint`: The AWS API Gateway endpoint URL (e.g. `https://xxxx.execute-api.us-east-1.amazonaws.com/prod/game/chat`)
   - `ApiKey`: The API Key for authorization
-  - `ProximityRadius`: How close players must be to talk to Bukeperry (default `15` meters)
+  - `ProximityRadius`: How close players must be to talk to Bukeperry (default `20` meters; shouts reach up to `70` meters)
+  - `ChannelId`: Optional channel ID (such as a Discord channel ID) for persistent multi-turn conversation memory
 
-*Note: For regular players connecting to a server, no configuration is needed!*
+*Note: For regular players connecting to a dedicated server, no configuration is needed!*
 
 ---
 
 ## 🔗 Links & Source
 - Source code: [GitHub: jim-brighter/bukeperry](https://github.com/jim-brighter/bukeperry)
 - Created by **Jim Brighter**
+
