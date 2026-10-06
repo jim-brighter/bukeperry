@@ -11,7 +11,16 @@ namespace BukeperryMod
     public Humanoid Humanoid { get; private set; }
     public MonsterAI MonsterAI { get; private set; }
 
+    public const string GrudgeZdoKey = "Bukeperry_Grudges";
+    public const string LastAttackTimeZdoKey = "Bukeperry_LastAttackTime";
+    public const float DeaggroDistance = 50.0f;
+    public const float OutOfRangeTimeout = 10.0f;
+    public const float DisengageTimeout = 30.0f;
+
+    private ZNetView m_nview;
     private readonly HashSet<long> m_hostilePlayerIDs = [];
+    private string m_lastSyncedGrudgeString = null;
+    private readonly Dictionary<long, float> m_outOfRangeTimers = [];
 
     private void Awake()
     {
@@ -33,6 +42,7 @@ namespace BukeperryMod
       Instances.Add(this);
       Humanoid = GetComponent<Humanoid>();
       MonsterAI = GetComponent<MonsterAI>();
+      m_nview = GetComponent<ZNetView>();
 
       // Self-heal: If loaded from a glitched save where Y position was falling, snap to terrain
       if (ZoneSystem.instance != null && ZoneSystem.instance.FindFloor(transform.position, out float floorY))
@@ -44,42 +54,196 @@ namespace BukeperryMod
       }
     }
 
+    private void Start()
+    {
+      if (m_nview == null)
+      {
+        m_nview = GetComponent<ZNetView>();
+      }
+
+      // Dormant sector wake-up check: if more than DisengageTimeout seconds passed since last attack, clear lingering grudge
+      if (m_nview != null && m_nview.IsValid() && m_nview.IsOwner() && ZNet.instance != null)
+      {
+        float lastAttackTime = m_nview.GetZDO().GetFloat(LastAttackTimeZdoKey, 0f);
+        if (lastAttackTime > 0f)
+        {
+          double now = ZNet.instance.GetTimeSeconds();
+          if (now - lastAttackTime > DisengageTimeout)
+          {
+            m_nview.GetZDO().Set(GrudgeZdoKey, "");
+            m_nview.GetZDO().Set(LastAttackTimeZdoKey, 0f);
+            m_hostilePlayerIDs.Clear();
+            m_lastSyncedGrudgeString = "";
+            BukeperryPlugin.Log.LogInfo("Bukeperry woke up after attackers fled while dormant. Chill again.");
+          }
+        }
+      }
+    }
+
     private void OnDestroy()
     {
       Instances.Remove(this);
     }
 
+    public HashSet<long> GetHostilePlayerIDs()
+    {
+      if (m_nview == null || !m_nview.IsValid() || m_nview.GetZDO() == null)
+      {
+        return m_hostilePlayerIDs;
+      }
+
+      string zdoString = m_nview.GetZDO().GetString(GrudgeZdoKey, "");
+      if (zdoString != m_lastSyncedGrudgeString)
+      {
+        m_lastSyncedGrudgeString = zdoString;
+        m_hostilePlayerIDs.Clear();
+        if (!string.IsNullOrEmpty(zdoString))
+        {
+          string[] parts = zdoString.Split(',');
+          foreach (string part in parts)
+          {
+            if (long.TryParse(part.Trim(), out long id))
+            {
+              m_hostilePlayerIDs.Add(id);
+            }
+          }
+        }
+      }
+      return m_hostilePlayerIDs;
+    }
+
     private void Update()
     {
-      if (m_hostilePlayerIDs.Count == 0) return;
+      // Grudge and de-aggro logic is strictly authoritative on the owner
+      if (m_nview == null || !m_nview.IsOwner()) return;
 
-      List<long> deadPlayers = null;
-      foreach (long playerID in m_hostilePlayerIDs)
+      var hostileIDs = GetHostilePlayerIDs();
+      if (hostileIDs.Count == 0) return;
+
+      List<long> toRemoveDied = null;
+      List<long> toRemoveFled = null;
+
+      foreach (long playerID in hostileIDs)
       {
         Player p = Player.GetPlayer(playerID);
-        if (p == null || p.IsDead())
+        if (p != null && p.IsDead())
         {
-          deadPlayers ??= [];
-          deadPlayers.Add(playerID);
+          toRemoveDied ??= [];
+          toRemoveDied.Add(playerID);
+          continue;
+        }
+
+        // Check if player left sector or ran beyond DeaggroDistance
+        bool outOfRange = (p == null) || (Vector3.Distance(transform.position, p.transform.position) > DeaggroDistance);
+
+        if (outOfRange)
+        {
+          m_outOfRangeTimers.TryGetValue(playerID, out float elapsed);
+          elapsed += Time.deltaTime;
+          m_outOfRangeTimers[playerID] = elapsed;
+
+          if (elapsed >= OutOfRangeTimeout)
+          {
+            toRemoveFled ??= [];
+            toRemoveFled.Add(playerID);
+          }
+        }
+        else
+        {
+          m_outOfRangeTimers[playerID] = 0f;
         }
       }
 
-      if (deadPlayers != null)
+      if (toRemoveDied != null)
       {
-        foreach (long id in deadPlayers)
+        foreach (long id in toRemoveDied)
         {
-          m_hostilePlayerIDs.Remove(id);
-          BukeperryPlugin.Log.LogInfo("Attacking viking died. Grudge resolved.");
+          RemoveGrudge(id, "died");
         }
+      }
+
+      if (toRemoveFled != null)
+      {
+        foreach (long id in toRemoveFled)
+        {
+          RemoveGrudge(id, "fled");
+        }
+      }
+    }
+
+    public void AddGrudge(long playerID)
+    {
+      if (playerID == 0) return;
+
+      // Grudge state is strictly authoritative on the owner
+      if (m_nview != null && m_nview.IsValid() && !m_nview.IsOwner()) return;
+
+      GetHostilePlayerIDs();
+      m_outOfRangeTimers.Remove(playerID);
+
+      if (ZNet.instance != null && m_nview != null && m_nview.IsValid())
+      {
+        m_nview.GetZDO().Set(LastAttackTimeZdoKey, (float)ZNet.instance.GetTimeSeconds());
+      }
+
+      if (m_hostilePlayerIDs.Add(playerID))
+      {
+        string newString = string.Join(",", m_hostilePlayerIDs);
+        m_lastSyncedGrudgeString = newString;
+        if (m_nview != null && m_nview.IsValid())
+        {
+          m_nview.GetZDO().Set(GrudgeZdoKey, newString);
+        }
+
+        Player player = Player.GetPlayer(playerID);
+        string name = player != null ? player.GetPlayerName() : $"Player {playerID}";
+        BukeperryPlugin.Log.LogInfo($"Bukeperry attacked by {name}! Entering rage mode.");
+      }
+
+      if (MonsterAI != null)
+      {
+        Player player = Player.GetPlayer(playerID);
+        if (player != null)
+        {
+          Traverse.Create(MonsterAI).Method("SetTarget", player).GetValue();
+        }
+        MonsterAI.Alert();
+      }
+    }
+
+    public void RemoveGrudge(long playerID, string reason = "died")
+    {
+      if (playerID == 0) return;
+
+      // Grudge state is strictly authoritative on the owner
+      if (m_nview != null && m_nview.IsValid() && !m_nview.IsOwner()) return;
+
+      GetHostilePlayerIDs();
+      m_outOfRangeTimers.Remove(playerID);
+
+      if (m_hostilePlayerIDs.Remove(playerID))
+      {
+        string newString = string.Join(",", m_hostilePlayerIDs);
+        m_lastSyncedGrudgeString = newString;
+        if (m_nview != null && m_nview.IsValid())
+        {
+          m_nview.GetZDO().Set(GrudgeZdoKey, newString);
+        }
+        BukeperryPlugin.Log.LogInfo($"Attacking viking {playerID} {reason}. Grudge resolved.");
 
         if (m_hostilePlayerIDs.Count == 0)
         {
+          if (m_nview != null && m_nview.IsValid() && m_nview.GetZDO() != null)
+          {
+            m_nview.GetZDO().Set(LastAttackTimeZdoKey, 0f);
+          }
+
           if (MonsterAI != null)
           {
             Traverse.Create(MonsterAI).Field<Character>("m_targetCreature").Value = null;
             Traverse.Create(MonsterAI).Field<bool>("m_alerted").Value = false;
           }
-          BukeperryPlugin.Log.LogInfo("All attackers dead. Bukeperry is chill again.");
+          BukeperryPlugin.Log.LogInfo("All attackers resolved. Bukeperry is chill again.");
         }
       }
     }
@@ -87,24 +251,13 @@ namespace BukeperryMod
     public void OnAttackedBy(Player player)
     {
       if (player == null || player.IsDead()) return;
-
-      long playerID = player.GetPlayerID();
-      if (m_hostilePlayerIDs.Add(playerID))
-      {
-        BukeperryPlugin.Log.LogInfo($"Bukeperry attacked by {player.GetPlayerName()}! Entering rage mode.");
-      }
-
-      if (MonsterAI != null)
-      {
-        Traverse.Create(MonsterAI).Method("SetTarget", player).GetValue();
-        MonsterAI.Alert();
-      }
+      AddGrudge(player.GetPlayerID());
     }
 
     public bool IsHostileTo(Player player)
     {
       if (player == null) return false;
-      return m_hostilePlayerIDs.Contains(player.GetPlayerID());
+      return GetHostilePlayerIDs().Contains(player.GetPlayerID());
     }
 
     private static ZDOID s_cachedBukeperryZDOID = ZDOID.None;

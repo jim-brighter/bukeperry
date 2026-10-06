@@ -31,19 +31,44 @@ namespace BukeperryMod
       return true;
     }
 
-    // Intercept damage to trigger retaliation
-    [HarmonyPatch(typeof(Character), nameof(Character.Damage))]
+    // Intercept network damage on the owner to trigger retaliation in multiplayer
+    [HarmonyPatch(typeof(Character), "RPC_Damage")]
     [HarmonyPrefix]
-    public static void OnDamagePrefix(Character __instance, HitData hit)
+    public static void RPC_DamagePrefix(Character __instance, long sender, HitData hit)
     {
       BukeperryController controller = __instance.GetComponent<BukeperryController>();
       if (controller == null) return;
 
       Character attacker = hit.GetAttacker();
-      if (attacker is Player player)
+      Player player = attacker as Player;
+      if (player == null && hit.HaveAttacker())
+      {
+        player = FindPlayerByZDOID(hit.m_attacker);
+      }
+
+      if (player != null)
       {
         controller.OnAttackedBy(player);
       }
+    }
+
+    public static Player FindPlayerByZDOID(ZDOID id)
+    {
+      if (id == ZDOID.None) return null;
+      if (ZNetScene.instance != null)
+      {
+        var go = ZNetScene.instance.FindInstance(id);
+        if (go != null && go.TryGetComponent<Player>(out var p))
+        {
+          return p;
+        }
+      }
+
+      foreach (Player p in Player.GetAllPlayers())
+      {
+        if (p.GetZDOID() == id) return p;
+      }
+      return null;
     }
 
     [HarmonyPatch(typeof(ZoneSystem), "Start")]
